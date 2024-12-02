@@ -14,6 +14,21 @@ const doesExist = (username) => {
   return userswithsamename.length > 0;
 };
 
+function getBooks() {
+  return new Promise((resolve, reject) => resolve(books));
+}
+
+// Get the book list available in the shop
+public_users.get("/", async function (req, res) {
+  try {
+    const bks = await getBooks();
+    res.send(JSON.stringify(bks, null, 4));
+  } catch (e) {
+    console.error(e);
+    res.json({ message: e });
+  }
+});
+
 public_users.post("/register", (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -32,56 +47,58 @@ public_users.post("/register", (req, res) => {
   return res.status(404).json({ message: "unable to register user" });
 });
 
-// Get the book list available in the shop
-public_users.get("/", function (req, res) {
-  //Write your code here
-  return res.send(JSON.stringify({ books }, null, 4));
-});
-
+function getBookByIsbn(isbn) {
+  return new Promise((resolve, reject) => {
+    if (isbn > 0 && isbn < 11) {
+      let foundBook = books[isbn];
+      resolve(books[isbn]);
+      return res.send(JSON.stringify({ foundBook }, null, 4));
+    } else {
+      reject({ status: 404, message: "Book not found" });
+    }
+  });
+}
 // Get book details based on ISBN
 public_users.get("/isbn/:isbn", function (req, res) {
   // isbn variable req
   const isbn = parseInt(req.params.isbn);
 
-  // isbn check from the books
-  if (isbn > 0 && isbn < 11) {
-    let foundBook = books[isbn];
-    return res.send(JSON.stringify({ foundBook }, null, 4));
-  }
-
-  return res.status(404).json({ message: "Book not found" });
+  getBookByIsbn(isbn).then(
+    (result) => res.send(JSON.stringify(result, null, 4)),
+    (error) => res.status(error.status).json({ message: error.message }),
+  );
 });
 
 // Get book details based on author
 public_users.get("/author/:author", function (req, res) {
   let author = req.params.author.toLowerCase();
 
-  // Get Book based on author
-  let authorFound = Object.values(books).filter(
-    (book) =>
-      book.author.toLowerCase() === author ||
-      book.author.toLowerCase().includes(author),
-  );
-  if (authorFound) {
-    return res.send(JSON.stringify(authorFound, null, 4));
-  }
-  return res.status(404).json({ message: "Book not found" });
+  getBooks()
+    .then((bookEntries) => Object.values(bookEntries))
+    .then((books) =>
+      books.filter(
+        (book) =>
+          book.author.toLowerCase() === author ||
+          book.author.toLowerCase().includes(author),
+      ),
+    )
+    .then((authorFound) => res.send(JSON.stringify(authorFound, null, 4)));
 });
 
 // Get all books based on title
 public_users.get("/title/:title", function (req, res) {
   let title = req.params.title.toLowerCase();
 
-  // Find books based on title
-  let titleFound = Object.values(books).filter(
-    (book) =>
-      book.title.toLowerCase() === title ||
-      book.title.toLowerCase().includes(title),
-  );
-  if (titleFound) {
-    return res.send(JSON.stringify(titleFound, null, 4));
-  }
-  return res.status(404).json({ message: "Book not found" });
+  getBooks()
+    .then((bookEntries) => Object.values(bookEntries))
+    .then((books) =>
+      books.filter(
+        (book) =>
+          book.title.toLowerCase() === title ||
+          book.title.toLowerCase().includes(title),
+      ),
+    )
+    .then((titleFound) => res.send(JSON.stringify(titleFound, null, 4)));
 });
 
 //  Get book review
@@ -89,13 +106,10 @@ public_users.get("/review/:isbn", function (req, res) {
   // isbn variable req
   const isbn = parseInt(req.params.isbn);
 
-  // isbn check from the books
-  if (isbn > 0 && isbn < 11) {
-    let foundBook = books[isbn].reviews;
-    return res.send(JSON.stringify({ review: foundBook }, null, 4));
-  }
-
-  return res.status(404).json({ message: "Book not found" });
+  getBookByIsbn(isbn).then(
+    (result) => res.send(JSON.stringify(result.reviews, null, 4)),
+    (error) => res.status(error.status).json({ message: error.message }),
+  );
 });
 
 module.exports.general = public_users;

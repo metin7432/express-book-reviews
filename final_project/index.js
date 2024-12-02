@@ -19,7 +19,7 @@ app.use(
 
 app.use("/customer/auth/*", function auth(req, res, next) {
   // Check if a user is logged in and has valid access token.
-  if (req.session.authenticated) {
+  if (req.session.authorization) {
     let token = req.session.authorization["accessToken"];
 
     // Verify jwt token

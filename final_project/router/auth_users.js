@@ -58,10 +58,45 @@ regd_users.post("/login", (req, res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  const username = req.session.authorization.username;
+  const isbn = req.params.isbn;
+  let reviews = books[isbn].reviews;
+  let reqReview = req.query.review;
+  console.log(reqReview);
+  console.log(username);
+  console.log(reviews);
+
+  if (!reqReview) {
+    return res.status(400).json({ message: "Please provide a review" });
+  }
+  if (!reviews) {
+    reviews = {};
+  }
+  // Check if the review exists and update the review
+  if (reviews[username]) {
+    if (reviews[username] === reqReview) {
+      return res.json({ message: "Same review Update" });
+    }
+    reviews[username] = reqReview;
+    return res.json({ message: `Review update to ${reqReview}` });
+  }
+
+  reviews[username] = reqReview;
+  return res.status(201).json({ message: `Review Added to ${reqReview}` });
 });
 
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  const username = req.session.authorization.username;
+  const isbn = req.params.isbn;
+  let reviews = books[isbn].reviews;
+
+  if (reviews) {
+    delete reviews[username];
+    return res.json({ message: "review deleted successfully" });
+  }
+
+  return res.status(404).json({ message: "review not found" });
+});
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
