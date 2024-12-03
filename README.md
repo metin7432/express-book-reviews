@@ -2,7 +2,7 @@
 
 This is the final project for the IBM Fullstack JavaScript Professional Certificate course: [Developing Back-End Apps with Node.js and Express](https://www.coursera.org/learn/developing-backend-apps-with-nodejs-and-express/home/welcome)
 
-
+![certificate](./final_project/assets/nodejs-express-certificate.png)
 ## Overview
 In this project you will assume the role of a back-end developer working for an online retailer selling books.
 
